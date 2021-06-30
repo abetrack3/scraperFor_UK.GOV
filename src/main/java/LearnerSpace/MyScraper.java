@@ -12,7 +12,8 @@ import java.util.List;
 public class MyScraper {
     public static void main(String[] args) throws IOException {
         //Connect to the URL (if that makes sense LOL!!)
-        Document doc = Jsoup.connect("http://abetrack3.me:5500/Lecture5/Float_and_Align.html").get();
+        Document doc = Jsoup.connect("https://www.google.com").get();
+//        Document doc = Jsoup.connect("http://abetrack3.me:5500/Lecture5/Float_and_Align.html").get();
 
         //Get Title of the page. That's basically
         System.out.println(doc.title());
@@ -23,13 +24,18 @@ public class MyScraper {
             System.out.println("\nLink-class: " + link.attr("class"));
             System.out.println("text: " + link.text());
 
-            Elements childNodes = link.children();
-            for(Element childNode : childNodes){
-//                System.out.println("misaki start");
-                System.out.print("--> " + childNode.nodeName());
-//                System.out.println("misaki stop");
-                System.out.println("--> " + childNode.text());
-            }
+//            Elements childNodes = link.children();
+//            for(Element childNode : childNodes){
+////                System.out.println("misaki start");
+//                System.out.print("--> " + childNode.nodeName());
+////                System.out.println("misaki stop");
+//                System.out.println("--> " + childNode.text());
+//            }
+            System.out.println("Getting all the images");
+            Elements images = doc.getElementsByTag("img");
+            for(Element image : images)
+                System.out.println("src = " + image.attr("abs:src"));
+
         }
 
 
