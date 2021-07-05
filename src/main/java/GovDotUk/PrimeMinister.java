@@ -59,18 +59,6 @@ public class PrimeMinister implements Runnable{
         return cal;
     }
 
-    public void dummyThreadTest(){
-        int i = 10;
-        while(i --> 0){
-            System.out.println("Name = " + name);
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
     @Override
     public void run() {
         if(this.fromPage == -1 && this.toPage == -1) splitTask();
