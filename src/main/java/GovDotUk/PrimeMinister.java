@@ -1,15 +1,12 @@
 package GovDotUk;
 
-import com.opencsv.CSVReader;
 import com.opencsv.CSVWriter;
-import com.opencsv.exceptions.CsvException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.io.File;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.text.ParseException;
@@ -75,13 +72,13 @@ public class PrimeMinister implements Runnable{
         int from = 1;
         int to = Math.min(load, totalPageCount);
         ArrayList<Thread> subTasks = new ArrayList<Thread>();
-        ArrayList<String> outputFileNames = new ArrayList<String>();
+        ArrayList<PrimeMinister> pmList = new ArrayList<PrimeMinister>();
         while (totalPageCount != 0){
             //create child threads
-            String outputFileName = String.format("%s From %d To %d.csv", this.name, from, to);
-            outputFileNames.add(outputFileName);
-            Thread t = new Thread(new PrimeMinister(this.name, this.servingSince, this.servingTill, from, to));
+            PrimeMinister pm = new PrimeMinister(this.name, this.servingSince, this.servingTill, from, to);
+            Thread t = new Thread(pm);
             subTasks.add(t);
+            pmList.add(pm);
             t.start();
 
             //workLoad Parameter increment
@@ -92,33 +89,16 @@ public class PrimeMinister implements Runnable{
         //concurrent scraping has started at this point
 
         //waiting for all the threads to complete -- joining the thread
-        for(Thread t : subTasks) {
+        speeches = new ArrayList<SpeechPage>();
+        for(int i = 0; i < subTasks.size(); i++) {
             try {
-                t.join();
+                subTasks.get(i).join();
+                speeches.addAll(pmList.get(i).getSpeeches());
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }
-
-        //combine all the output files
-        String temp = String.format("Dataset/GovDotUK/%s/%s Combined.csv", this.name, this.name);
-        try {
-            CSVWriter csvWriter = new CSVWriter(new FileWriter(temp));
-
-            //write columnNames
-            String[] columnNames = {"Speaker Name", "Title", "Date of Speech Delivered", "URL to Speech", "Text of Speech"};
-            csvWriter.writeNext(columnNames);
-
-            //read all the csv file and write out on one csv file
-            for(String filename : outputFileNames){
-                temp = String.format("Dataset/GovDotUK/%s/%s", this.name, filename);
-                CSVReader csvReader = new CSVReader(new FileReader(temp));
-                csvWriter.writeAll(csvReader.readAll());
-                csvWriter.flush();
-            }
-        } catch (IOException | CsvException e) {
-            e.printStackTrace();
-        }
+        write();
     }
 
     public void executeTask() {
@@ -126,16 +106,23 @@ public class PrimeMinister implements Runnable{
             String url = generateLink(this.name, i);
             Document searchPage = loadPage(url);
             scrapePage(searchPage);
-            write();
         }
     }
 
-    private void write(){
-        String path = String.format("Dataset/GovDotUK/%s/%s From %d To %d.csv", this.name, this.name, this.fromPage, this.toPage);
+    private void write() {
         try {
-            CSVWriter csvWriter = new CSVWriter(new FileWriter(path));
-            for(SpeechPage sp : speeches)
-                csvWriter.writeNext(sp.toStringArray());
+            //sorting the speeches based on date of speech delivery
+            speeches.sort((x, y) -> x.compareTo(y)); //using lambda expression for comparator
+
+            //combine all the output files
+            String temp = String.format("Dataset/GovDotUK/%s/%s.csv", this.name, this.name);
+            CSVWriter csvWriter = new CSVWriter(new FileWriter(temp));
+
+            //write columnNames
+            String[] columnNames = {"Speaker Name", "Title", "Date of Speech Delivered", "URL to Speech", "Text of Speech"};
+            csvWriter.writeNext(columnNames);
+            for(SpeechPage t : speeches)
+                csvWriter.writeNext(t.toStringArray());
             csvWriter.flush();
         } catch (IOException e) {
             e.printStackTrace();
@@ -198,6 +185,10 @@ public class PrimeMinister implements Runnable{
         res += "+" + this.servingTill.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.US);
         res += "+" + this.servingTill.get(Calendar.YEAR);
         return res;
+    }
+
+    public ArrayList<SpeechPage> getSpeeches() {
+        return speeches;
     }
 
 }

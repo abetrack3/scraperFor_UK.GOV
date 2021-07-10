@@ -52,6 +52,14 @@ public class SpeechPage {
         return doc.select("div[class=\"govspeak\"]").get(0).text();
     }
 
+    public Calendar getDateOfSpeechDelivery() {
+        return dateOfSpeechDelivery;
+    }
+
+    public int compareTo(SpeechPage sp) {
+        return dateOfSpeechDelivery.compareTo(sp.getDateOfSpeechDelivery());
+    }
+
     public String[] toStringArray(){
         String date = "" + this.dateOfSpeechDelivery.get(Calendar.DATE);
         date += " " + this.dateOfSpeechDelivery.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.US);
