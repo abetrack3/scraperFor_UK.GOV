@@ -21,7 +21,7 @@ public class PrimeMinister implements Runnable{
     private String name;
     private Calendar servingSince;
     private Calendar servingTill;
-    private ArrayList<String[]> speeches;
+    private ArrayList<SpeechPage> speeches;
     private int fromPage;
     private int toPage;
 
@@ -39,7 +39,7 @@ public class PrimeMinister implements Runnable{
         this.servingTill = servingTill;
         this.fromPage = fromPage;
         this.toPage = toPage;
-        this.speeches = new ArrayList<String[]>();
+        this.speeches = new ArrayList<SpeechPage>();
     }
 
     public Calendar parseDateString(String date){
@@ -106,7 +106,7 @@ public class PrimeMinister implements Runnable{
             CSVWriter csvWriter = new CSVWriter(new FileWriter(temp));
 
             //write columnNames
-            String[] columnNames = {"Speaker Name", "Title", "Date of Speech Delivered", "URL to Speech"};
+            String[] columnNames = {"Speaker Name", "Title", "Date of Speech Delivered", "URL to Speech", "Text of Speech"};
             csvWriter.writeNext(columnNames);
 
             //read all the csv file and write out on one csv file
@@ -124,7 +124,6 @@ public class PrimeMinister implements Runnable{
     public void executeTask() {
         for(int i = fromPage; i <= toPage; i++) {
             String url = generateLink(this.name, i);
-//            System.out.println("url = " + url);
             Document searchPage = loadPage(url);
             scrapePage(searchPage);
             write();
@@ -135,7 +134,8 @@ public class PrimeMinister implements Runnable{
         String path = String.format("Dataset/GovDotUK/%s/%s From %d To %d.csv", this.name, this.name, this.fromPage, this.toPage);
         try {
             CSVWriter csvWriter = new CSVWriter(new FileWriter(path));
-            csvWriter.writeAll(speeches);
+            for(SpeechPage sp : speeches)
+                csvWriter.writeNext(sp.toStringArray());
             csvWriter.flush();
         } catch (IOException e) {
             e.printStackTrace();
@@ -152,13 +152,10 @@ public class PrimeMinister implements Runnable{
                 continue;
             String speechTitle = anchorTag.text();
             String speechUrl = "https://www.gov.uk" + anchorTag.attr("href");
-            Calendar speechDate = extractSpeechDate(loadPage(speechUrl));
-            String date = "" + speechDate.get(Calendar.DATE);
-            date += " " + speechDate.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.US);
-            date += " " + speechDate.get(Calendar.YEAR);
-            String[] speech = {this.name, speechTitle, date, speechUrl};
-            System.out.println(Arrays.toString(speech));
-            speeches.add(speech);
+            Document speech = loadPage(speechUrl);
+            SpeechPage speechPage = new SpeechPage(this.name, speechTitle, speechUrl, speech);
+            System.out.println(speechPage);
+            speeches.add(speechPage);
         }
     }
 
@@ -171,27 +168,6 @@ public class PrimeMinister implements Runnable{
             return totalPageCount;
         }
         return 1;
-    }
-
-    private Calendar extractSpeechDate(Document doc){
-        Elements elements = doc.select("dd[class]");
-        for(Element element : elements) {
-            if(element.attr("class").equals("app-c-important-metadata__definition")){
-                StringTokenizer st = new StringTokenizer(element.text());
-                String shortenedStringDate = st.nextToken() + " " + st.nextToken() + " " + st.nextToken();
-                SimpleDateFormat sdf = new SimpleDateFormat("dd MMM yyyy");
-                try {
-                    Date d = sdf.parse(shortenedStringDate);
-                    Calendar cal = Calendar.getInstance();
-                    cal.setTime(d);
-                    return cal;
-                } catch (ParseException e) {
-                    e.printStackTrace();
-                }
-                break;
-            }
-        }
-        return null;
     }
 
     private Document loadPage(String url) {

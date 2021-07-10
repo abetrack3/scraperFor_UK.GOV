@@ -10,6 +10,10 @@ import java.util.*;
 
 public class GovDotUKController {
     public static void main(String[] args) {
+        execute();
+    }
+
+    public static void execute() {
         List<String[]> ministers = getMinisterList();
         List<Thread> ministerScraper = new ArrayList<Thread>();
         for(String[] minister: ministers){
