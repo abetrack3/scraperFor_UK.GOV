@@ -30,7 +30,7 @@ public class SpeechPage {
     private Calendar extractSpeechDate(Document doc){
         Elements elements = doc.select("dd[class]");
         for(Element element : elements) {
-            if(element.attr("class").equals("app-c-important-metadata__definition")){
+            if(element.attr("class").equals("gem-c-metadata__definition")){
                 StringTokenizer st = new StringTokenizer(element.text());
                 String shortenedStringDate = st.nextToken() + " " + st.nextToken() + " " + st.nextToken();
                 SimpleDateFormat sdf = new SimpleDateFormat("dd MMM yyyy");
@@ -40,9 +40,8 @@ public class SpeechPage {
                     cal.setTime(d);
                     return cal;
                 } catch (ParseException e) {
-                    e.printStackTrace();
+                    continue;
                 }
-                break;
             }
         }
         return null;
