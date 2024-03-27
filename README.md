@@ -1,4 +1,4 @@
-# UK Prime Minister Speech Scraper
+# UK Prime Minister Speech Repository Crawler
 
 A simple automation to create dataset consisting of UK Prime Minister speeches.
 Speeches are collected from the official site: [GOV.UK](https://gov.uk)
